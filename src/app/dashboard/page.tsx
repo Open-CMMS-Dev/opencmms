@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/sidebar"
 
 import data from "./data.json"
+import { SecondSidebar } from "@/components/second-sidebar"
 
 export default function Page() {
   return (
@@ -35,6 +36,7 @@ export default function Page() {
           </div>
         </div>
       </SidebarInset>
+      <SecondSidebar side="right" variant="inset" collapsible="offcanvas" />
     </SidebarProvider>
   )
 }
