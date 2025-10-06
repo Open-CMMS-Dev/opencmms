@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerabilities
+    url: mailto:security@opencmms.dev
+    about: Please do not report security issues publicly. Follow the process in SECURITY.md.
+  - name: Ask a question or start a discussion
+    url: https://github.com/opencmms/opencmms/discussions
+    about: For help designing modules, architectural questions, or roadmap discussions.
