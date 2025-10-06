@@ -15,6 +15,8 @@ export default function Layout(
     const variant = "inset";
   return (
     <SidebarProvider
+      defaultLeftOpen={false}
+      defaultRightOpen={false}
       style={
         {
           "--sidebar-width": "calc(var(--spacing) * 72)",

@@ -40,14 +40,34 @@ function getSidebarState(side: "left" | "right", defaultOpen: boolean): boolean 
   const cookieName = side === "right" ? SIDEBAR_COOKIE_NAME_RIGHT : SIDEBAR_COOKIE_NAME_LEFT
   const cookies = document.cookie.split(";")
   
+  console.log(`[Sidebar] Reading ${side} sidebar state from cookie: ${cookieName}`)
+  console.log(`[Sidebar] All cookies:`, document.cookie)
+  
   for (const cookie of cookies) {
     const [name, value] = cookie.trim().split("=")
     if (name === cookieName) {
+      console.log(`[Sidebar] Found ${side} sidebar cookie: ${name}=${value}`)
       return value === "true"
     }
   }
   
+  console.log(`[Sidebar] No cookie found for ${side} sidebar, using default: ${defaultOpen}`)
   return defaultOpen
+}
+
+function setSidebarCookie(side: "left" | "right", value: boolean) {
+  if (typeof document === "undefined") return
+  
+  const cookieName = side === "right" ? SIDEBAR_COOKIE_NAME_RIGHT : SIDEBAR_COOKIE_NAME_LEFT
+  const cookieValue = `${cookieName}=${value}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
+  
+  console.log(`[Sidebar] Setting ${side} sidebar cookie: ${cookieValue}`)
+  document.cookie = cookieValue
+  
+  // Verify the cookie was set
+  setTimeout(() => {
+    console.log(`[Sidebar] After setting ${side} cookie, all cookies:`, document.cookie)
+  }, 100)
 }
 
 type SidebarContextProps = {
@@ -78,7 +98,7 @@ function useSidebar() {
 }
 
 function SidebarProvider({
-  defaultLeftOpen = true,
+  defaultLeftOpen = false,
   defaultRightOpen = false,
   className,
   style,
@@ -91,16 +111,30 @@ function SidebarProvider({
   const isMobile = useIsMobile()
   const [leftOpenMobile, setLeftOpenMobile] = React.useState(false)
   const [rightOpenMobile, setRightOpenMobile] = React.useState(false)
+  const [isHydrated, setIsHydrated] = React.useState(false)
 
-  // Internal state for both sidebars
-  const [_leftOpen, _setLeftOpen] = React.useState(() => getSidebarState("left", defaultLeftOpen))
-  const [_rightOpen, _setRightOpen] = React.useState(() => getSidebarState("right", defaultRightOpen))
+  // Internal state for both sidebars - start with defaults to prevent hydration mismatch
+  const [_leftOpen, _setLeftOpen] = React.useState(defaultLeftOpen)
+  const [_rightOpen, _setRightOpen] = React.useState(defaultRightOpen)
+
+  // After hydration, sync with cookies
+  React.useEffect(() => {
+    setIsHydrated(true)
+    const leftCookieState = getSidebarState("left", defaultLeftOpen)
+    const rightCookieState = getSidebarState("right", defaultRightOpen)
+    
+    console.log(`[Sidebar] Hydration: left cookie=${leftCookieState}, right cookie=${rightCookieState}`)
+    
+    _setLeftOpen(leftCookieState)
+    _setRightOpen(rightCookieState)
+  }, [defaultLeftOpen, defaultRightOpen])
 
   const setLeftOpen = React.useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {
       const openState = typeof value === "function" ? value(_leftOpen) : value
+      console.log(`[Sidebar] Setting left sidebar state: ${_leftOpen} -> ${openState}`)
       _setLeftOpen(openState)
-      document.cookie = `${SIDEBAR_COOKIE_NAME_LEFT}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
+      setSidebarCookie("left", openState)
     },
     [_leftOpen]
   )
@@ -108,8 +142,9 @@ function SidebarProvider({
   const setRightOpen = React.useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {
       const openState = typeof value === "function" ? value(_rightOpen) : value
+      console.log(`[Sidebar] Setting right sidebar state: ${_rightOpen} -> ${openState}`)
       _setRightOpen(openState)
-      document.cookie = `${SIDEBAR_COOKIE_NAME_RIGHT}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
+      setSidebarCookie("right", openState)
     },
     [_rightOpen]
   )
@@ -327,6 +362,7 @@ function SidebarTrigger({
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     onClick?.(event)
+    console.log(`[Sidebar] Trigger clicked for ${side} sidebar`)
     if (side === "right") {
       toggleRightSidebar()
     } else {
