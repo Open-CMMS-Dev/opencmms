@@ -1,3 +1,4 @@
+import type { ReactElement } from "react"
 import { z } from "zod"
 
 // Core types for the module system
@@ -14,6 +15,41 @@ export interface ModuleDefinition {
   commands?: CommandProvider[]
   config?: Record<string, unknown>
   initialize?: () => Promise<void>
+  navigation?: ModuleNavigationItem[]
+  ui?: ModuleUiDefinition
+}
+
+export interface ModuleUiDefinition {
+  pages: ModuleUiPage[]
+}
+
+export type ModulePageComponent<TParams extends Record<string, string> = Record<string, string>> = (
+  props: ModulePageProps<TParams>
+) => Promise<ReactElement> | ReactElement
+
+export interface ModulePageProps<TParams extends Record<string, string> = Record<string, string>> {
+  params: TParams
+  searchParams?: Record<string, string | string[] | undefined>
+}
+
+export interface ModuleUiPage<TParams extends Record<string, string> = Record<string, string>> {
+  id: string
+  slug: string[]
+  component: ModulePageComponent<TParams>
+  title?: string
+  description?: string
+}
+
+export type NavigationSection = "primary" | "modules" | "secondary"
+
+export interface ModuleNavigationItem {
+  id: string
+  title: string
+  slug: string[]
+  icon?: string
+  description?: string
+  section?: NavigationSection
+  order?: number
 }
 
 export interface ModuleRoute {

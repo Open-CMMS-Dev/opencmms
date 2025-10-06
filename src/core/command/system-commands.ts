@@ -66,14 +66,14 @@ export const systemCommands: CommandProvider = (ctx) => [
     section: "Quick Nav",
     icon: "package",
     keywords: ["assets"],
-    action: { kind: "navigate", href: "/dashboard/assets" },
+    action: { kind: "navigate", href: "/modules/assets" },
   },
   {
-    id: "nav.work-orders", 
+    id: "nav.work-orders",
     title: "Work Orders",
     section: "Quick Nav",
     icon: "clipboard",
     keywords: ["work", "orders"],
-    action: { kind: "navigate", href: "/dashboard/work-orders" },
+    action: { kind: "navigate", href: "/modules/work-orders" },
   },
 ]

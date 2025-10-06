@@ -1,5 +1,6 @@
 import { moduleRegistry } from "@/core/modules/registry"
 import { assetsModule } from "@/modules/assets/module"
+import { workOrdersModule } from "@/modules/work-orders/module"
 
 // Core module that provides basic system functionality
 const coreModule = {
@@ -36,6 +37,7 @@ export async function initializeModules() {
     
     // Register feature modules
     moduleRegistry.register(assetsModule)
+    moduleRegistry.register(workOrdersModule)
     
     // Add more modules here as they're created:
     // moduleRegistry.register(workOrdersModule)

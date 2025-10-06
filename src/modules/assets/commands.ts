@@ -11,9 +11,9 @@ export const assetsCommands: CommandProvider = (context) => {
       icon: "package",
       shortcut: "⌘A",
       keywords: ["assets", "all", "browse", "list"],
-      action: { 
-        kind: "navigate", 
-        href: "/dashboard/assets" 
+      action: {
+        kind: "navigate",
+        href: "/modules/assets"
       }
     },
     {
@@ -26,7 +26,7 @@ export const assetsCommands: CommandProvider = (context) => {
       keywords: ["create", "new", "add", "asset"],
       action: {
         kind: "navigate",
-        href: "/dashboard/assets/create"
+        href: "/modules/assets/create"
       },
       when: (ctx) => ctx.user.roles.includes("admin") || 
                     ctx.user.roles.includes("assets.create")
@@ -45,9 +45,9 @@ export const assetsCommands: CommandProvider = (context) => {
         section: "Assets",
         icon: "package",
         keywords: ["assets", category, "browse"],
-        action: { 
-          kind: "navigate", 
-          href: `/dashboard/assets/${category}` 
+        action: {
+          kind: "navigate",
+          href: `/modules/assets/categories/${category}`
         }
       },
       {
@@ -59,7 +59,7 @@ export const assetsCommands: CommandProvider = (context) => {
         keywords: ["create", "new", category],
         action: {
           kind: "navigate",
-          href: `/dashboard/assets/${category}/create`
+          href: `/modules/assets/categories/${category}/create`
         },
         when: (ctx) => ctx.user.roles.includes("admin") || 
                       ctx.user.roles.includes("assets.create")
@@ -110,7 +110,7 @@ export const assetsCommands: CommandProvider = (context) => {
         keywords: ["work orders", "maintenance", "history"],
         action: {
           kind: "navigate",
-          href: `/dashboard/work-orders?assetId=${context.selection.assetId}`
+          href: `/modules/work-orders?assetId=${context.selection.assetId}`
         }
       },
       {
@@ -123,7 +123,7 @@ export const assetsCommands: CommandProvider = (context) => {
         keywords: ["create", "work order", "maintenance"],
         action: {
           kind: "navigate",
-          href: `/dashboard/work-orders/create?assetId=${context.selection.assetId}`
+          href: `/modules/work-orders/create?assetId=${context.selection.assetId}`
         },
         when: (ctx) => ctx.user.roles.includes("admin") || 
                       ctx.user.roles.includes("work-orders.create")

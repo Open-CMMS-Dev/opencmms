@@ -1,5 +1,31 @@
-import type { ModuleDefinition, EntityDefinition, ActionContext, ActionResult } from "./types"
+import type {
+  ModuleDefinition,
+  EntityDefinition,
+  ActionContext,
+  ActionResult,
+  ModuleDefinition as RegisteredModule,
+  ModuleUiPage,
+  ModuleNavigationItem,
+  NavigationSection,
+} from "./types"
 import { createClient } from "@/lib/supabase/server"
+
+export interface SidebarNavItem {
+  id: string
+  moduleId: string
+  title: string
+  href: string
+  icon?: string
+  section: NavigationSection
+  order: number
+  description?: string
+}
+
+export interface ResolvedModulePage {
+  module: RegisteredModule
+  page: ModuleUiPage
+  params: Record<string, string>
+}
 
 export class ModuleRegistry {
   private modules = new Map<string, ModuleDefinition>()
@@ -223,6 +249,145 @@ export class ModuleRegistry {
     }
 
     return commands
+  }
+
+  /**
+   * Build sidebar navigation items aggregated from modules
+   */
+  getSidebarNavigation(): SidebarNavItem[] {
+    const items: SidebarNavItem[] = []
+
+    for (const module of this.getAllModules()) {
+      const navigationItems = this.buildModuleNavigation(module)
+
+      for (const item of navigationItems) {
+        const href = this.buildModuleHref(module.id, item.slug)
+
+        items.push({
+          id: item.id,
+          moduleId: module.id,
+          title: item.title,
+          href,
+          icon: item.icon,
+          section: item.section ?? "modules",
+          order: item.order ?? 0,
+          description: item.description,
+        })
+      }
+    }
+
+    return items
+      .sort((a, b) => {
+        if (a.section === b.section) {
+          if (a.order === b.order) {
+            return a.title.localeCompare(b.title)
+          }
+          return a.order - b.order
+        }
+
+        const sectionOrder: Record<NavigationSection, number> = {
+          primary: 0,
+          modules: 1,
+          secondary: 2,
+        }
+
+        return sectionOrder[a.section] - sectionOrder[b.section]
+      })
+  }
+
+  /**
+   * Resolve a module UI page based on slug segments
+   */
+  resolveModulePage(moduleId: string, slug: string[]): ResolvedModulePage | undefined {
+    const module = this.getModule(moduleId)
+    if (!module || !module.ui?.pages?.length) return undefined
+
+    const pages = [...module.ui.pages].sort((a, b) => b.slug.length - a.slug.length)
+
+    for (const page of pages) {
+      const params = this.matchPageSlug(page.slug, slug)
+      if (params) {
+        return {
+          module,
+          page,
+          params,
+        }
+      }
+    }
+
+    if (slug.length === 0) {
+      const [firstPage] = module.ui.pages
+      if (firstPage) {
+        return {
+          module,
+          page: firstPage,
+          params: {},
+        }
+      }
+    }
+
+    return undefined
+  }
+
+  private buildModuleNavigation(module: ModuleDefinition): ModuleNavigationItem[] {
+    const items = module.navigation ?? []
+
+    if (items.length > 0) {
+      return items
+    }
+
+    if (module.ui?.pages?.length) {
+      return [
+        {
+          id: `${module.id}.overview`,
+          title: module.name,
+          slug: [],
+          section: "modules",
+        },
+      ]
+    }
+
+    return []
+  }
+
+  private buildModuleHref(moduleId: string, slug: string[]): string {
+    const path = slug.length ? `/${slug.join('/')}` : ""
+    return `/modules/${moduleId}${path}`
+  }
+
+  private matchPageSlug(template: string[], actual: string[]): Record<string, string> | null {
+    if (template.length !== actual.length) {
+      return null
+    }
+
+    const params: Record<string, string> = {}
+
+    for (let i = 0; i < template.length; i++) {
+      const templateSegment = template[i]
+      const actualSegment = actual[i]
+
+      if (!templateSegment) {
+        return null
+      }
+
+      if (templateSegment.startsWith("[...") && templateSegment.endsWith("]")) {
+        const paramName = templateSegment.slice(4, -1)
+        params[paramName] = actual.slice(i).join("/")
+        return params
+      }
+
+      if (templateSegment.startsWith("[") && templateSegment.endsWith("]")) {
+        const paramName = templateSegment.slice(1, -1)
+        params[paramName] = actualSegment
+        continue
+      }
+
+      if (templateSegment !== actualSegment) {
+        return null
+      }
+    }
+
+    return params
   }
 
   /**
