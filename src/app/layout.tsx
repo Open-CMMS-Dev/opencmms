@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { CommandMenu } from "@/components/command-menu";
 import { Toaster } from "@/components/ui/sonner";
+import { initializeModules } from "@/core/modules/bootstrap";
 import "./globals.css";
+
+// Initialize modules on app startup
+initializeModules().catch(console.error);
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

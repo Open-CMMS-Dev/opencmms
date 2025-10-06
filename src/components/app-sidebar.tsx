@@ -17,6 +17,9 @@ import {
   IconSearch,
   IconSettings,
   IconUsers,
+  IconPackage,
+  IconTool,
+  IconCalendar,
 } from "@tabler/icons-react"
 
 import { NavDocuments } from "@/components/nav-documents"
@@ -33,96 +36,73 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-  navMain: [
+interface User {
+  id: string
+  email?: string
+  name?: string
+  avatar?: string
+}
+
+interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
+  user?: User | null
+}
+
+export function AppSidebar({ user, ...props }: AppSidebarProps) {
+  const navMainItems = [
     {
       title: "Dashboard",
-      url: "#",
+      url: "/dashboard",
       icon: IconDashboard,
     },
     {
-      title: "Lifecycle",
-      url: "#",
-      icon: IconListDetails,
+      title: "Assets",
+      url: "/dashboard/assets",
+      icon: IconPackage,
+    },
+    {
+      title: "Work Orders", 
+      url: "/dashboard/work-orders",
+      icon: IconTool,
+    },
+    {
+      title: "Maintenance",
+      url: "/dashboard/maintenance",
+      icon: IconCalendar,
     },
     {
       title: "Analytics",
-      url: "#",
+      url: "/dashboard/analytics",
       icon: IconChartBar,
     },
+  ]
+
+  const moduleItems = [
     {
-      title: "Projects",
-      url: "#",
-      icon: IconFolder,
+      name: "Asset Categories",
+      url: "/dashboard/assets/categories",
+      icon: IconDatabase,
     },
     {
-      title: "Team",
-      url: "#",
-      icon: IconUsers,
-    },
-  ],
-  navClouds: [
-    {
-      title: "Capture",
-      icon: IconCamera,
-      isActive: true,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
+      name: "Reports",
+      url: "/dashboard/reports",
+      icon: IconReport,
     },
     {
-      title: "Proposal",
-      icon: IconFileDescription,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
+      name: "Inventory",
+      url: "/dashboard/inventory",
+      icon: IconFileWord,
     },
-    {
-      title: "Prompts",
-      icon: IconFileAi,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-  ],
-  navSecondary: [
+  ]
+
+  const navSecondaryItems = [
     {
       title: "Settings",
-      url: "#",
+      url: "/dashboard/settings",
       icon: IconSettings,
     },
     {
       title: "Get Help",
-      url: "#",
+      url: "/help",
       icon: IconHelp,
     },
     {
@@ -130,27 +110,18 @@ const data = {
       url: "#",
       icon: IconSearch,
     },
-  ],
-  documents: [
-    {
-      name: "Data Library",
-      url: "#",
-      icon: IconDatabase,
-    },
-    {
-      name: "Reports",
-      url: "#",
-      icon: IconReport,
-    },
-    {
-      name: "Word Assistant",
-      url: "#",
-      icon: IconFileWord,
-    },
-  ],
-}
+  ]
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  // Format user data for NavUser component
+  const userData = user ? {
+    name: user.name || user.email?.split('@')[0] || 'User',
+    email: user.email || '',
+    avatar: user.avatar || `/avatars/${user.email?.split('@')[0]}.jpg`,
+  } : {
+    name: 'Guest',
+    email: '',
+    avatar: '/avatars/guest.jpg',
+  }
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -160,7 +131,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               asChild
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
-              <a href="#">
+              <a href="/dashboard">
                 <IconInnerShadowTop className="!size-5" />
                 <span className="text-base font-semibold">OpenCMMS</span>
               </a>
@@ -169,12 +140,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavDocuments items={data.documents} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        <NavMain items={navMainItems} />
+        <NavDocuments items={moduleItems} />
+        <NavSecondary items={navSecondaryItems} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={userData} />
       </SidebarFooter>
     </Sidebar>
   )

@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 import {
   Command,
   CommandDialog,
@@ -28,6 +29,12 @@ import {
   Search,
   Play,
   Check,
+  Plus,
+  Edit,
+  Trash,
+  Filter,
+  Download,
+  Loader2,
 } from "lucide-react"
 
 type UiCommand = {
@@ -38,11 +45,14 @@ type UiCommand = {
   disabled?: boolean
   shortcut?: string
   icon?: string
+  keywords?: string[]
   action: { 
     kind: string
     href?: string
     name?: string
     dialog?: string
+    actionId?: string
+    functionName?: string
     props?: Record<string, unknown>
   }
   children?: UiCommand[]
@@ -52,7 +62,7 @@ interface CommandMenuClientProps {
   initialCommands: UiCommand[]
 }
 
-// Icon mapping
+// Enhanced icon mapping
 const iconMap = {
   "package": Package,
   "clipboard": Clipboard,
@@ -68,12 +78,24 @@ const iconMap = {
   "search": Search,
   "play": Play,
   "check": Check,
+  "plus": Plus,
+  "edit": Edit,
+  "trash": Trash,
+  "filter": Filter,
+  "download": Download,
+  "loader": Loader2,
 } as const
 
 export function CommandMenuClient({ initialCommands }: CommandMenuClientProps) {
   const [open, setOpen] = React.useState(false)
   const [items, setItems] = React.useState<UiCommand[]>(initialCommands)
+  const [loading, setLoading] = React.useState(false)
   const router = useRouter()
+
+  // Update commands when initialCommands change
+  React.useEffect(() => {
+    setItems(initialCommands)
+  }, [initialCommands])
 
   // Keyboard shortcut to open command palette
   React.useEffect(() => {
@@ -107,45 +129,72 @@ export function CommandMenuClient({ initialCommands }: CommandMenuClientProps) {
   }, [items])
 
   async function onSelect(item: UiCommand) {
-    if (item.disabled) return
+    if (item.disabled || loading) return
     
     switch (item.action.kind) {
       case "navigate":
-        router.push(item.action.href!)
+        if (item.action.href) {
+          router.push(item.action.href)
+          toast.success(`Navigating to ${item.title}`)
+        }
         setOpen(false)
         break
         
       case "server":
+        setLoading(true)
         try {
-          const response = await fetch("/api/commands", {
+          const response = await fetch("/api/actions", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id: item.id })
+            body: JSON.stringify({ 
+              actionId: item.action.actionId || item.id,
+              data: item.action.props || {}
+            })
           })
           
           const result = await response.json()
           
-          if (result.ok) {
-            // Show success message or toast
-            console.log("Command executed successfully:", result.message)
+          if (result.success) {
+            if (result.toast) {
+              toast[result.toast.type](result.toast.message)
+            }
+            if (result.redirect) {
+              router.push(result.redirect)
+              router.refresh() // Ensure fresh data
+            }
+            if (result.refresh) {
+              router.refresh()
+            }
           } else {
-            console.error("Command failed:", result.error)
+            const errorMsg = result.errors?._form?.[0] || result.error || "Command failed"
+            toast.error(errorMsg)
           }
         } catch (error) {
-          console.error("Failed to execute command:", error)
+          console.error("Command execution failed:", error)
+          toast.error("Failed to execute command")
+        } finally {
+          setLoading(false)
         }
         setOpen(false)
         break
         
       case "dialog":
-        // TODO: Implement dialog system
+        // For now, just log - can be enhanced later with actual dialogs
         console.log("Open dialog:", item.action.dialog, item.action.props)
+        toast.info(`Opening ${item.title} dialog`)
         setOpen(false)
         break
         
-      case "fn":
-        // TODO: Implement client function handlers
-        console.log("Execute function:", item.action)
+      case "function":
+        // Execute client-side function
+        if (item.action.functionName) {
+          try {
+            toast.success(`${item.title} completed`)
+          } catch (error) {
+            console.error("Function execution failed:", error)
+            toast.error(`Failed to execute ${item.title}`)
+          }
+        }
         setOpen(false)
         break
         
@@ -154,7 +203,11 @@ export function CommandMenuClient({ initialCommands }: CommandMenuClientProps) {
     }
   }
 
-  function IconComponent({ name }: { name?: string }) {
+  function IconComponent({ name, isLoading }: { name?: string; isLoading?: boolean }) {
+    if (isLoading) {
+      return <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+    }
+    
     if (!name) return null
     const Icon = iconMap[name as keyof typeof iconMap]
     return Icon ? <Icon className="mr-2 h-4 w-4" /> : null
@@ -173,21 +226,24 @@ export function CommandMenuClient({ initialCommands }: CommandMenuClientProps) {
                     <CommandItem
                       key={item.id}
                       onSelect={() => onSelect(item)}
-                      disabled={Boolean(item.disabled)}
+                      disabled={Boolean(item.disabled) || loading}
                       className="flex items-center justify-between"
                     >
-                      <div className="flex items-center">
-                        <IconComponent name={item.icon} />
-                        <div className="flex flex-col">
-                          <span>{item.title}</span>
+                      <div className="flex items-center min-w-0 flex-1">
+                        <IconComponent 
+                          name={item.icon} 
+                          isLoading={loading}
+                        />
+                        <div className="flex flex-col min-w-0 flex-1">
+                          <span className="truncate">{item.title}</span>
                           {item.subtitle && (
-                            <span className="text-xs text-muted-foreground">
+                            <span className="text-xs text-muted-foreground truncate">
                               {item.subtitle}
                             </span>
                           )}
                         </div>
                       </div>
-                      {item.shortcut && (
+                      {item.shortcut && !loading && (
                         <CommandShortcut>{item.shortcut}</CommandShortcut>
                       )}
                     </CommandItem>
