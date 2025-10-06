@@ -1,5 +1,6 @@
 
 import { AppSidebar } from "@/components/app-sidebar"
+import { SecondSidebar } from "@/components/second-sidebar"
 
 import { SiteHeader } from "@/components/site-header"
 import {
@@ -11,6 +12,7 @@ import {
 export default function Layout(
     { children }: { children: React.ReactNode }
 ) {
+    const variant = "inset";
   return (
     <SidebarProvider
       style={
@@ -20,19 +22,18 @@ export default function Layout(
         } as React.CSSProperties
       }
     >
-      <AppSidebar variant="inset" />
+      <AppSidebar variant={variant} />
       <SidebarInset>
         <SiteHeader />
         <div className="flex flex-1 flex-col">
-      <div className="@container/main flex flex-1 flex-col gap-2">
-      <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-        {children}
-
-      </div>
-      </div>
-      </div>
+          <div className="@container/main flex flex-1 flex-col gap-2">
+            <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+              {children}
+            </div>
+          </div>
+        </div>
       </SidebarInset>
-      {/* <SecondSidebar side="right" variant="inset" collapsible="icon" /> */}
+      <SecondSidebar side="right" variant={variant} collapsible="icon" />
     </SidebarProvider>
   )
 }
