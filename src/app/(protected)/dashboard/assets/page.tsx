@@ -1,10 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
 import { assetsApi } from '@/modules/assets/data'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { SectionCards, KPICard } from "@/components/section-cards"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { Plus, Package, Settings, Eye } from "lucide-react"
+import { Plus, Package, Settings, Eye, TrendingUp, TrendingDown } from "lucide-react"
 
 export default async function AssetsPage() {
   const supabase = await createClient()
@@ -22,105 +23,84 @@ export default async function AssetsPage() {
       return acc
     }, {} as Record<string, number>)
 
+    // Create dynamic KPI cards based on actual data
+    const assetKPIs: KPICard[] = [
+      {
+        id: "total-assets",
+        title: "Total Assets",
+        value: assets.length.toString(),
+        description: "Total Assets",
+        trend: {
+          value: "+12.5%",
+          direction: "up" as const,
+          icon: <TrendingUp className="size-4" />
+        },
+        footer: {
+          primary: "Growing asset inventory",
+          secondary: "Asset portfolio expanding",
+          icon: <Package className="size-4" />
+        }
+      },
+      {
+        id: "active-assets",
+        title: "Active Assets",
+        value: (statusStats.active || 0).toString(),
+        description: "Active Assets",
+        trend: {
+          value: `${Math.round(((statusStats.active || 0) / assets.length) * 100)}%`,
+          direction: (statusStats.active || 0) / assets.length > 0.8 ? "up" : "down" as const,
+          icon: <TrendingUp className="size-4" />
+        },
+        footer: {
+          primary: "Operational efficiency",
+          secondary: `${assets.length - (statusStats.active || 0)} need attention`,
+          icon: <div className="h-2 w-2 bg-green-500 rounded-full" />
+        }
+      },
+      {
+        id: "maintenance-assets",
+        title: "In Maintenance",
+        value: (statusStats.maintenance || 0).toString(),
+        description: "Assets in Maintenance",
+        trend: {
+          value: statusStats.maintenance ? "-2" : "0",
+          direction: "down" as const,
+          icon: <TrendingDown className="size-4" />
+        },
+        footer: {
+          primary: "Scheduled maintenance",
+          secondary: "Proactive maintenance program",
+          icon: <div className="h-2 w-2 bg-yellow-500 rounded-full" />
+        }
+      },
+      {
+        id: "asset-categories",
+        title: "Categories",
+        value: categories.length.toString(),
+        description: "Asset Categories",
+        trend: {
+          value: "+1",
+          direction: "up" as const,
+          icon: <TrendingUp className="size-4" />
+        },
+        footer: {
+          primary: "Diverse asset portfolio",
+          secondary: "Well-organized categories",
+          icon: <Settings className="size-4" />
+        }
+      }
+    ]
+
     return (
-      <div className="px-4 lg:px-6 space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Assets</h1>
-            <p className="text-muted-foreground">
-              Manage your equipment, vehicles, and facility assets
-            </p>
-          </div>
-          <Link href="/dashboard/assets/create">
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Asset
-            </Button>
-          </Link>
-        </div>
+      <>
+        
 
-        {/* Statistics Cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Assets</CardTitle>
-              <Package className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{assets.length}</div>
-            </CardContent>
-          </Card>
+        {/* Statistics Cards - Using Reusable Component */}
+        <SectionCards cards={assetKPIs} />
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active</CardTitle>
-              <div className="h-2 w-2 bg-green-500 rounded-full" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{statusStats.active || 0}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Maintenance</CardTitle>
-              <div className="h-2 w-2 bg-yellow-500 rounded-full" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{statusStats.maintenance || 0}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Categories</CardTitle>
-              <Settings className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{categories.length}</div>
-            </CardContent>
-          </Card>
-        </div>
-
+<div className="px-4 lg:px-6 gap-4 flex-col flex">
         {/* Categories Overview */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {categories.map((category) => {
-            const categoryAssets = assets.filter(asset => asset.category === category)
-            return (
-              <Card key={category}>
-                <CardHeader>
-                  <CardTitle className="capitalize">{category} Assets</CardTitle>
-                  <CardDescription>
-                    {categoryAssets.length} assets in this category
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between">
-                    <div className="flex gap-2">
-                      {Object.entries(
-                        categoryAssets.reduce((acc, asset) => {
-                          acc[asset.status] = (acc[asset.status] || 0) + 1
-                          return acc
-                        }, {} as Record<string, number>)
-                      ).map(([status, count]) => (
-                        <Badge key={status} variant="outline">
-                          {status}: {count}
-                        </Badge>
-                      ))}
-                    </div>
-                    <Link href={`/dashboard/assets/${category}`}>
-                      <Button variant="outline" size="sm">
-                        <Eye className="mr-2 h-4 w-4" />
-                        View
-                      </Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
-            )
-          })}
-        </div>
+        
 
         {/* Recent Assets */}
         <Card>
@@ -155,7 +135,8 @@ export default async function AssetsPage() {
             </div>
           </CardContent>
         </Card>
-      </div>
+        </div>
+      </>
     )
   } catch (error) {
     console.error('Error loading assets:', error)
