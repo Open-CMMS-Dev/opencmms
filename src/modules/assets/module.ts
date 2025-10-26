@@ -2,6 +2,10 @@ import { z } from "zod"
 import type { ModuleDefinition } from "@/core/modules/types"
 import { assetsCommands } from "./commands"
 import { assetActions } from "./actions"
+import { AssetsOverviewPage } from "./ui/pages/overview"
+import { AssetCategoriesPage } from "./ui/pages/categories"
+import { AssetCategoryPage } from "./ui/pages/category"
+import { AssetDetailPage } from "./ui/pages/detail"
 
 // Zod schemas for validation
 const createAssetSchema = z.object({
@@ -37,31 +41,72 @@ export const assetsModule: ModuleDefinition = {
   
   routes: [
     {
-      path: "/dashboard/assets",
-      component: "AssetsList",
-      permissions: ["assets.read"]
+      path: "/modules/assets",
+      component: "AssetsOverview",
+      permissions: ["assets.read"],
     },
     {
-      path: "/dashboard/assets/[category]",
-      component: "CategoryAssetsList", 
-      permissions: ["assets.read"]
+      path: "/modules/assets/categories",
+      component: "AssetCategories",
+      permissions: ["assets.read"],
     },
     {
-      path: "/dashboard/assets/[category]/[id]",
+      path: "/modules/assets/categories/[category]",
+      component: "AssetCategory",
+      permissions: ["assets.read"],
+    },
+    {
+      path: "/modules/assets/categories/[category]/[id]",
       component: "AssetDetail",
-      permissions: ["assets.read"]
+      permissions: ["assets.read"],
     },
-    {
-      path: "/dashboard/assets/create",
-      component: "AssetCreate",
-      permissions: ["assets.create"]
-    },
-    {
-      path: "/dashboard/assets/[category]/create",
-      component: "CategoryAssetCreate",
-      permissions: ["assets.create"]
-    }
   ],
+
+  navigation: [
+    {
+      id: "assets.overview",
+      title: "Assets",
+      slug: [],
+      icon: "IconPackage",
+      section: "modules",
+      order: 10,
+    },
+    {
+      id: "assets.categories",
+      title: "Categories",
+      slug: ["categories"],
+      icon: "IconFolders",
+      section: "modules",
+      order: 20,
+    },
+  ],
+
+  ui: {
+    pages: [
+      {
+        id: "assets.overview",
+        slug: [],
+        component: AssetsOverviewPage,
+        title: "Assets Overview",
+      },
+      {
+        id: "assets.categories",
+        slug: ["categories"],
+        component: AssetCategoriesPage,
+        title: "Asset Categories",
+      },
+      {
+        id: "assets.category",
+        slug: ["categories", "[category]"],
+        component: AssetCategoryPage,
+      },
+      {
+        id: "assets.detail",
+        slug: ["categories", "[category]", "[id]"],
+        component: AssetDetailPage,
+      },
+    ],
+  },
 
   actions: [
     {

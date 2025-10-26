@@ -8,16 +8,16 @@ export const assetActions = {
     try {
       const asset = await assetsApi.create(data, context.supabase)
 
-      revalidatePath("/dashboard/assets")
-      revalidatePath(`/dashboard/assets/${data.category}`)
-      
+      revalidatePath("/modules/assets")
+      revalidatePath(`/modules/assets/categories/${data.category}`)
+
       return {
         success: true,
         data: asset,
-        redirect: `/dashboard/assets/${asset.category}/${asset.id}`,
-        toast: { 
-          type: "success", 
-          message: `Asset "${asset.name}" created successfully` 
+        redirect: `/modules/assets/categories/${asset.category}/${asset.id}`,
+        toast: {
+          type: "success",
+          message: `Asset "${asset.name}" created successfully`
         }
       }
     } catch (error: any) {
@@ -35,9 +35,9 @@ export const assetActions = {
     try {
       const asset = await assetsApi.update(data.id, data, context.supabase)
 
-      revalidatePath("/dashboard/assets")
-      revalidatePath(`/dashboard/assets/${asset.category}`)
-      revalidatePath(`/dashboard/assets/${asset.category}/${asset.id}`)
+      revalidatePath("/modules/assets")
+      revalidatePath(`/modules/assets/categories/${asset.category}`)
+      revalidatePath(`/modules/assets/categories/${asset.category}/${asset.id}`)
       
       return {
         success: true,
@@ -78,14 +78,14 @@ export const assetActions = {
 
       await assetsApi.delete(data.id, context.supabase)
 
-      revalidatePath("/dashboard/assets")
-      
+      revalidatePath("/modules/assets")
+
       return {
         success: true,
-        redirect: "/dashboard/assets",
-        toast: { 
-          type: "success", 
-          message: "Asset deleted successfully" 
+        redirect: "/modules/assets",
+        toast: {
+          type: "success",
+          message: "Asset deleted successfully"
         }
       }
     } catch (error: any) {
@@ -114,7 +114,7 @@ export const assetActions = {
 
       if (error) throw error
 
-      revalidatePath("/dashboard/assets")
+      revalidatePath("/modules/assets")
       
       return {
         success: true,

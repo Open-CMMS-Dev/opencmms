@@ -1,26 +1,7 @@
 "use client"
 
 import * as React from "react"
-import {
-  IconCamera,
-  IconChartBar,
-  IconDashboard,
-  IconDatabase,
-  IconFileAi,
-  IconFileDescription,
-  IconFileWord,
-  IconFolder,
-  IconHelp,
-  IconInnerShadowTop,
-  IconListDetails,
-  IconReport,
-  IconSearch,
-  IconSettings,
-  IconUsers,
-  IconPackage,
-  IconTool,
-  IconCalendar,
-} from "@tabler/icons-react"
+import { IconInnerShadowTop } from "@tabler/icons-react"
 
 import { NavDocuments } from "@/components/nav-documents"
 import { NavMain } from "@/components/nav-main"
@@ -43,74 +24,26 @@ interface User {
   avatar?: string
 }
 
-interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
-  user?: User | null
+interface SidebarNavItem {
+  id: string
+  title: string
+  href: string
+  icon?: string
 }
 
-export function AppSidebar({ user, ...props }: AppSidebarProps) {
-  const navMainItems = [
-    {
-      title: "Dashboard",
-      url: "/dashboard",
-      icon: IconDashboard,
-    },
-    {
-      title: "Assets",
-      url: "/dashboard/assets",
-      icon: IconPackage,
-    },
-    {
-      title: "Work Orders", 
-      url: "/dashboard/work-orders",
-      icon: IconTool,
-    },
-    {
-      title: "Maintenance",
-      url: "/dashboard/maintenance",
-      icon: IconCalendar,
-    },
-    {
-      title: "Analytics",
-      url: "/dashboard/analytics",
-      icon: IconChartBar,
-    },
-  ]
+interface SidebarNavigationSections {
+  primary: SidebarNavItem[]
+  modules: SidebarNavItem[]
+  secondary: SidebarNavItem[]
+}
 
-  const moduleItems = [
-    {
-      name: "Asset Categories",
-      url: "/dashboard/assets/categories",
-      icon: IconDatabase,
-    },
-    {
-      name: "Reports",
-      url: "/dashboard/reports",
-      icon: IconReport,
-    },
-    {
-      name: "Inventory",
-      url: "/dashboard/inventory",
-      icon: IconFileWord,
-    },
-  ]
+interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
+  user?: User | null
+  navigation: SidebarNavigationSections
+}
 
-  const navSecondaryItems = [
-    {
-      title: "Settings",
-      url: "/dashboard/settings",
-      icon: IconSettings,
-    },
-    {
-      title: "Get Help",
-      url: "/help",
-      icon: IconHelp,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: IconSearch,
-    },
-  ]
+export function AppSidebar({ user, navigation, ...props }: AppSidebarProps) {
+  const { primary, modules, secondary } = navigation
 
   // Format user data for NavUser component
   const userData = user ? {
@@ -140,9 +73,9 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={navMainItems} />
-        <NavDocuments items={moduleItems} />
-        <NavSecondary items={navSecondaryItems} className="mt-auto" />
+        <NavMain items={primary} />
+        <NavDocuments items={modules.map((item) => ({ name: item.title, url: item.href, icon: item.icon }))} label="Modules" />
+        <NavSecondary items={secondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={userData} />
